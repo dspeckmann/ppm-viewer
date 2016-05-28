@@ -5,13 +5,16 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+using System.Collections;
 
 namespace PpmViewer
 {
     public partial class MainForm : Form
     {
         // TODO: Do not ignore maximum color value
-        // TODO: Add support for other file types (first check for 'P', then switch case for the next char and abort if number doesn't match)
+        // TODO: Add support for PlainPBM, PlainPGM and PlainPPM
+
+            // TODO LOKAL: PBM und PGM testen und commit!
 
         public MainForm(string path)
             : this()
@@ -57,58 +60,186 @@ namespace PpmViewer
 
             Cursor = Cursors.WaitCursor;
             toolStripProgressBar.Value = 0;
-            
+            toolStripStatusLabel.Text = "Loading...";
+
+
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open), new ASCIIEncoding()))
             {
                 // Check magic number
-                if (reader.ReadChar() != 'P' || reader.ReadChar() != '6')
+                if (reader.ReadChar() != 'P')
                 {
                     Cursor = Cursors.Default;
+                    toolStripStatusLabel.Text = "Could not load " + path;
                     MessageBox.Show(this, "File " + path + " is not a valid PPM file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 try
                 {
-                    // Read width, height and maximum color value while ignoring whitespace and comments
-                    ReadWhitespace(reader);
-                    int width = ReadValue(reader);
-                    ReadWhitespace(reader);
-                    int height = ReadValue(reader);
-                    ReadWhitespace(reader);
-                    int maximumColorValue = ReadValue(reader);
-                    ReadWhitespace(reader);
+                    Bitmap bitmap;
 
-                    // Read the actual pixels
-                    Bitmap bitmap = new Bitmap(width, height);
-                    int i = 0;
-                    while (reader.BaseStream.Position != reader.BaseStream.Length)
+                    char c = reader.ReadChar();
+
+                    switch (c)
                     {
-                        byte[] rgb = reader.ReadBytes(3);
-                        Color color = Color.FromArgb(rgb[0], rgb[1], rgb[2]);
-                        bitmap.SetPixel(i % width, (int)Math.Floor((double)i / width), color);
-                        i++;
-
-                        // Explicitely cast width to float so it gets applied to height and i, too
-                        float progress = (i / ((float)width * height)) * 100;
-                        toolStripProgressBar.Value = (int)progress;
+                        case '1':
+                            bitmap = LoadPlainPbm(reader);
+                            break;
+                        case '2':
+                            bitmap = LoadPlainPgm(reader);
+                            break;
+                        case '3':
+                            bitmap = LoadPlainPpm(reader);
+                            break;
+                        case '4':
+                            bitmap = LoadPbm(reader);
+                            break;
+                        case '5':
+                            bitmap = LoadPgm(reader);
+                            break;
+                        case '6':
+                            bitmap = LoadPpm(reader);
+                            break;
+                        default:
+                            Cursor = Cursors.Default;
+                            toolStripStatusLabel.Text = "Could not load " + path;
+                            MessageBox.Show(this, "File " + path + " is not a valid PPM file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
                     }
 
                     pictureBox.Image = bitmap;
-                    toolStripStatusLabel.Text = string.Format("File name: {0} / Width: {1} / Height: {2} / Maximum color value: {3}",
-                        new string[] { Path.GetFileName(path), width.ToString(), height.ToString(), maximumColorValue.ToString() });
+                    toolStripStatusLabel.Text = string.Format("File name: {0} / Width: {1} / Height: {2}",
+                        Path.GetFileName(path), bitmap.Width.ToString(), bitmap.Height.ToString());
                 }
                 catch(Exception)
                 {
                     Cursor = Cursors.Default;
+                    toolStripStatusLabel.Text = "Could not load " + path;
                     MessageBox.Show(this, "File " + path + " is not a valid PPM file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
             }
-
+            
             Cursor = Cursors.Default;
         }
-        
+
+        private Bitmap LoadPlainPbm(BinaryReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Bitmap LoadPlainPgm(BinaryReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Bitmap LoadPlainPpm(BinaryReader reader)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Bitmap LoadPbm(BinaryReader reader)
+        {
+            // Read width, height and maximum color value while ignoring whitespace and comments
+            ReadWhitespace(reader);
+            int width = ReadValue(reader);
+            ReadWhitespace(reader);
+            int height = ReadValue(reader);
+            ReadWhitespace(reader);
+
+            // Read the actual pixels
+            Bitmap bitmap = new Bitmap(width, height);
+            int x = 0, y = 0;
+            while (reader.BaseStream.Position != reader.BaseStream.Length)
+            {
+                BitArray bits = new BitArray(reader.ReadByte());
+                foreach(bool bit in bits)
+                {
+                    Color color;
+                    if(bit)
+                    {
+                        color = Color.Black;
+                    }
+                    else
+                    {
+                        color = Color.White;
+                    }
+
+                    bitmap.SetPixel(x, y, color);
+
+                    // Explicitely cast width to float so it gets applied to height and i, too
+                    float progress = ((x + 1) * (y + 1) / ((float)width * height)) * 100;
+                    toolStripProgressBar.Value = (int)progress;
+
+                    if (++x == width)
+                    {
+                        x = 0;
+                        y++;
+                        break;
+                    }
+                }
+            }
+
+            return bitmap;
+        }
+
+        private Bitmap LoadPgm(BinaryReader reader)
+        {
+            // Read width, height and maximum color value while ignoring whitespace and comments
+            ReadWhitespace(reader);
+            int width = ReadValue(reader);
+            ReadWhitespace(reader);
+            int height = ReadValue(reader);
+            ReadWhitespace(reader);
+            int maximumGrayValue = ReadValue(reader);
+            ReadWhitespace(reader);
+
+            // Read the actual pixels
+            Bitmap bitmap = new Bitmap(width, height);
+            int i = 0;
+            while (reader.BaseStream.Position != reader.BaseStream.Length)
+            {
+                byte grayValue = reader.ReadByte();
+                Color color = Color.FromArgb(grayValue, grayValue, grayValue);
+                bitmap.SetPixel(i % width, (int)Math.Floor((double)i / width), color);
+                i++;
+
+                // Explicitely cast width to float so it gets applied to height and i, too
+                float progress = ((i + 1) / ((float)width * height)) * 100;
+                toolStripProgressBar.Value = (int)progress;
+            }
+
+            return bitmap;
+        }
+
+        private Bitmap LoadPpm(BinaryReader reader)
+        {
+            // Read width, height and maximum color value while ignoring whitespace and comments
+            ReadWhitespace(reader);
+            int width = ReadValue(reader);
+            ReadWhitespace(reader);
+            int height = ReadValue(reader);
+            ReadWhitespace(reader);
+            int maximumColorValue = ReadValue(reader);
+            ReadWhitespace(reader);
+            
+            // Read the actual pixels
+            Bitmap bitmap = new Bitmap(width, height);
+            int i = 0;
+            while (reader.BaseStream.Position != reader.BaseStream.Length)
+            {
+                byte[] rgb = reader.ReadBytes(3);
+                Color color = Color.FromArgb(rgb[0], rgb[1], rgb[2]);
+                bitmap.SetPixel(i % width, (int)Math.Floor((double)i / width), color);
+                i++;
+
+                // Explicitely cast width to float so it gets applied to height and i, too
+                float progress = (i / ((float)width * height)) * 100;
+                toolStripProgressBar.Value = (int)progress;
+            }
+
+            return bitmap;
+        }
 
         /// <summary>
         /// Reads from the BinaryReader until it encounters whitespace and tries to convert the read bytes to an integer.
@@ -147,7 +278,6 @@ namespace PpmViewer
                     reader.ReadChar();
                     while (c != '\n')
                     {
-                        reader.ReadChar();
                         c = reader.ReadChar();
                     }
                 }
