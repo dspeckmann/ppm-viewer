@@ -13,8 +13,7 @@ namespace PpmViewer
     {
         // TODO: Do not ignore maximum color value
         // TODO: Add support for PlainPBM, PlainPGM and PlainPPM
-
-            // TODO LOKAL: PBM und PGM testen und commit!
+        // TODO: Allow saving as PPM, PGM or PBM
 
         public MainForm(string path)
             : this()
@@ -35,6 +34,28 @@ namespace PpmViewer
             }
         }
 
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (pictureBox.Image == null)
+                return;
+
+            string oldStatusText = toolStripStatusLabel.Text;
+            toolStripStatusLabel.Text = "Saving image...";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                toolStripStatusLabel.Text = "Saving image as " + saveFileDialog.FileName + "...";
+                try
+                {
+                    pictureBox.Image.Save(saveFileDialog.FileName);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Could not save file as " + saveFileDialog.FileName + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            toolStripStatusLabel.Text = oldStatusText;
+        }
+
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
@@ -51,7 +72,7 @@ namespace PpmViewer
         /// <param name="path">The file to open.</param>
         private void LoadImage(string path)
         {
-            if(!File.Exists(path))
+            if (!File.Exists(path))
             {
                 Cursor = Cursors.Default;
                 MessageBox.Show(this, "File " + path + " cannot be found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -111,7 +132,7 @@ namespace PpmViewer
                     toolStripStatusLabel.Text = string.Format("File name: {0} / Width: {1} / Height: {2}",
                         Path.GetFileName(path), bitmap.Width.ToString(), bitmap.Height.ToString());
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     Cursor = Cursors.Default;
                     toolStripStatusLabel.Text = "Could not load " + path;
@@ -119,7 +140,8 @@ namespace PpmViewer
                     return;
                 }
             }
-            
+
+            saveAsToolStripMenuItem.Enabled = true;
             Cursor = Cursors.Default;
         }
 
