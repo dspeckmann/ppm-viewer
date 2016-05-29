@@ -123,6 +123,9 @@
   <metadata name="openFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>315, 17</value>
   </metadata>
+  <data name="openFileDialog.Filter" xml:space="preserve">
+    <value>All image files (*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.ppm;*.pgm;*.pbm)|(*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.ppm;*.pgm;*.pbm)|JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|PNG (*.png)|*.png|GIF (*.gif)|*.gif|BMP (*.bmp)|*.bmp|PPM (*.ppm)|*.ppm|PGM (*.pgm)|*.pgm|PBM (*.pbm)|*.pbm</value>
+  </data>
   <metadata name="saveFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>509, 17</value>
   </metadata>

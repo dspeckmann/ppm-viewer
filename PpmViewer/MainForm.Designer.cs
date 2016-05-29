@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -121,12 +122,12 @@
             // openFileDialog
             // 
             this.openFileDialog.FileName = "openFileDialog";
-            this.openFileDialog.Filter = "PPM (*.ppm)|*.ppm|PGM (*.pgm)|*.pgm|PBM (*.pbm)|*.pbm";
+            this.openFileDialog.Filter = resources.GetString("openFileDialog.Filter");
             // 
             // saveFileDialog
             // 
-            this.saveFileDialog.Filter = "JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|PNG (*.png)|*.png|GIF (*.gif)|*.gif|BMP (*.bmp)|" +
-    "*.bmp";
+            this.saveFileDialog.Filter = "PPM (*.ppm)|*.ppm|PGM (*.pgm)|*.pgm|PBM (*.pbm)|*.pbm|JPEG (*.jpg;*.jpeg)|*.jpg;*" +
+    ".jpeg|PNG (*.png)|*.png|GIF (*.gif)|*.gif|BMP (*.bmp)|*.bmp";
             // 
             // pictureBox
             // 

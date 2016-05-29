@@ -2,18 +2,20 @@
 using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Collections.Generic;
 using System.Text;
-using System.Diagnostics;
 using System.Collections;
+using System.Linq;
 
 namespace PpmViewer
 {
     public partial class MainForm : Form
     {
-        // TODO: Do not ignore maximum color value
+        // TODO: Fix PBM loading
+        // TODO: Do not ignore maximum color/gray value
         // TODO: Add support for PlainPBM, PlainPGM and PlainPPM
-        // TODO: Allow saving as PPM, PGM or PBM
+        // TODO: Allow saving as (plain) PPM, PGM or PBM
+        // TODO: LoadPbm, LoadPgm and LoadPpm share too much code
+        // TODO: Customize error message for different file types
 
         public MainForm(string path)
             : this()
@@ -30,7 +32,23 @@ namespace PpmViewer
         {
             if(openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                LoadImage(openFileDialog.FileName);
+                string[] customExtensions = { ".pbm", ".pgm", ".ppm" };
+
+                if (customExtensions.Any(extension => extension == Path.GetExtension(openFileDialog.FileName)))
+                {
+                    LoadImage(openFileDialog.FileName);
+                }
+                else
+                {
+                    try
+                    {
+                        pictureBox.Image = Image.FromFile(openFileDialog.FileName);
+                    }
+                    catch(Exception)
+                    {
+                        MessageBox.Show("Error loading " + openFileDialog.FileName + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
             }
         }
 
@@ -175,7 +193,8 @@ namespace PpmViewer
             while (reader.BaseStream.Position != reader.BaseStream.Length)
             {
                 BitArray bits = new BitArray(reader.ReadByte());
-                foreach(bool bit in bits)
+
+                foreach (bool bit in bits)
                 {
                     Color color;
                     if(bit)
@@ -186,7 +205,7 @@ namespace PpmViewer
                     {
                         color = Color.White;
                     }
-
+                    
                     bitmap.SetPixel(x, y, color);
 
                     // Explicitely cast width to float so it gets applied to height and i, too
@@ -261,6 +280,36 @@ namespace PpmViewer
             }
 
             return bitmap;
+        }
+
+        private void SavePlainPbm(BinaryWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SavePlainPgm(BinaryWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SavePlainPpm(BinaryWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SavePbm(BinaryWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SavePgm(BinaryWriter writer)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SavePpm(BinaryWriter writer)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
