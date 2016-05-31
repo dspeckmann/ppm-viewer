@@ -6,14 +6,12 @@ using System.Windows.Forms;
 namespace PpmViewer
 {
     // TODO: Do not ignore maximum color/gray value
-    // TODO: Notify user when image is loading, now that WaitCursor is gone
     // TODO: try-catch does not seem to work with async-await
-    // TODO: Check license of Anymap file formats and names
-    // TODO: Improve about screen with custom graphics and link to GitHub
     // TODO: Detect anymap formats by magic number, not extension?
-    // TODO: Implement zoom?
     // TODO: Add support for Plain PBM, PGM, PPM?
     // TODO: How to distinguish between binary and plain formats when saving?
+    // TODO: Implement zoom?
+    // TODO: AutoScaleMode Font vs DPI?
 
     public partial class MainForm : Form
     {
@@ -49,23 +47,25 @@ namespace PpmViewer
             
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                Cursor = Cursors.WaitCursor;
+                string path = saveFileDialog.FileName;
                 string extension = Path.GetExtension(saveFileDialog.FileName);
+
+                Cursor = Cursors.WaitCursor;
 
                 try
                 {
                     if (extension == ".pbm" || extension == ".pgm" || extension == ".ppm")
                     {
-                        Anymap.Save(image, saveFileDialog.FileName);
+                        Anymap.Save(image, path);
                     }
                     else
                     {
-                        image.Save(saveFileDialog.FileName);
+                        image.Save(path);
                     }
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show("Could not save file as " + saveFileDialog.FileName + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(string.Format("Could not save file as {0}!", path), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
                 Cursor = Cursors.Default;
@@ -86,28 +86,32 @@ namespace PpmViewer
         {
             string filename = Path.GetFileName(path);
             string extension = Path.GetExtension(path);
-            
+
+            PictureTabPage tab = new PictureTabPage(filename);
+            tabControl.TabPages.Add(tab);
+            tabControl.SelectedTab = tab;
+            tab.Cursor = Cursors.WaitCursor;
+
             try
             {
                 Image image;
                 if (extension == ".pbm" || extension == ".pgm" || extension == ".ppm")
                 {
-                    image = await Anymap.Load(path);
+                    image = await Anymap.LoadAsync(path);
                 }
                 else
                 {
                     image = Image.FromFile(path);
                 }
 
-                PictureTabPage tab = new PictureTabPage(filename, image);
-                tabControl.TabPages.Add(tab);
-                tabControl.SelectedTab = tab;
-                
+                tab.Image = image;
+                tab.Cursor = Cursors.Default;
                 saveAsToolStripMenuItem.Enabled = true;
             }
             catch (Exception)
             {
-                MessageBox.Show("Error loading " + filename + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                tabControl.TabPages.Remove(tab);
+                MessageBox.Show(string.Format("Error loading {0}!", path), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

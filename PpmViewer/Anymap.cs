@@ -9,30 +9,48 @@ namespace PpmViewer
 {
     static class Anymap
     {
-        // Async because Anymap loading takes pretty long right now
-        public async static Task<Bitmap> Load(string path)
+        /// <summary>
+        /// Loads an anymap file into a bitmap asynchronously.
+        /// </summary>
+        /// <param name="path">The path of the anymap file to load.</param>
+        /// <returns>The task that delivers a bitmap containing the loaded image.</returns>
+        public static async Task<Bitmap> LoadAsync(string path)
         {
             return await Task<Bitmap>.Run(new Func<Bitmap>(() =>
             {
-                string extension = Path.GetExtension(path);
-                switch (extension)
-                {
-                    case ".pbm":
-                        return LoadFromPbm(path);
-                    case ".pgm":
-                        return LoadFromPgm(path);
-                    case ".ppm":
-                        return LoadFromPpm(path);
-                    default:
-                        throw new Exception("Unknown file extension.");
-                }
+                return Load(path);
             }));
         }
-        
+
+        /// <summary>
+        /// Loads an anymap file into a bitmap.
+        /// </summary>
+        /// <param name="path">The path of the anymap file to load.</param>
+        /// <returns>A bitmap containing the loaded image.</returns>
+        public static Bitmap Load(string path)
+        {
+            string extension = Path.GetExtension(path);
+            switch (extension)
+            {
+                case ".pbm":
+                    return LoadFromPbm(path);
+                case ".pgm":
+                    return LoadFromPgm(path);
+                case ".ppm":
+                    return LoadFromPpm(path);
+                default:
+                    throw new Exception("Unknown file extension.");
+            }
+        }
+        /// <summary>
+        /// Saves an image to an anymap file.
+        /// </summary>
+        /// <param name="image">The image to save.</param>
+        /// <param name="path">The path where the anymap file should be saved.</param>
         public static void Save(Image image, string path)
         {
             string extension = Path.GetExtension(path);
-            switch(extension)
+            switch (extension)
             {
                 case ".pbm":
                     SaveToPbm(image, path);
@@ -53,7 +71,7 @@ namespace PpmViewer
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
                 // Check magic number P4
-                if (reader.ReadChar() != 'P' || reader.ReadChar() != '4') throw new Exception(); // TODO: Exception;
+                if (reader.ReadChar() != 'P' || reader.ReadChar() != '4') throw new Exception("Invalid PBM file.");
 
                 // Read width and height while ignoring whitespace and comments
                 reader.ReadWhitespace();
@@ -90,7 +108,7 @@ namespace PpmViewer
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
                 // Check magic number P5
-                if (reader.ReadChar() != 'P' || reader.ReadChar() != '5') throw new Exception(); // TODO: Exception;
+                if (reader.ReadChar() != 'P' || reader.ReadChar() != '5') throw new Exception("Invalid PGM file.");
 
                 // Read width, height and maximum gray value while ignoring whitespace and comments
                 reader.ReadWhitespace();
@@ -120,7 +138,7 @@ namespace PpmViewer
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
                 // Check magic number P6
-                if (reader.ReadChar() != 'P' || reader.ReadChar() != '6') throw new Exception(); // TODO: Exception
+                if (reader.ReadChar() != 'P' || reader.ReadChar() != '6') throw new Exception("Invalid PPM file.");
 
                 // Read width, height and maximum color value while ignoring whitespace and comments
                 reader.ReadWhitespace();

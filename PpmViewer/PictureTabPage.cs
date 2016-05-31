@@ -13,15 +13,18 @@ namespace PpmViewer
             {
                 return pictureBox.Image;
             }
+            set
+            {
+                pictureBox.Image = value;
+            }
         }
 
-        public PictureTabPage(string text, Image image)
+        public PictureTabPage(string text)
             : base(text)
         {
             AutoScroll = true;
 
             pictureBox = new PictureBox();
-            pictureBox.Image = image;
             pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
             Controls.Add(pictureBox);
         }
