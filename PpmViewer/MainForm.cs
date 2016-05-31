@@ -13,13 +13,13 @@ namespace PpmViewer
         // TODO: Fix PBM loading
         // TODO: Do not ignore maximum color/gray value
         // TODO: Add support for PlainPBM, PlainPGM and PlainPPM
-        // TODO: Allow saving as PGM or PBM, maybe Plain PGM, PBM, PPM?
-        // TODO: Fix PPM saving
+        // TODO: Allow saving as PBM, maybe Plain PGM, PBM, PPM?
         // TODO: LoadPbm, LoadPgm and LoadPpm share too much code
         // TODO: Customize error message for different file types
         // TODO: How to distinguish between PPM and PlainPPM when saving?
-        // TODO: Zoom
+        // TODO: Implement zoom?
         // TODO: Notify user when image is loading, now that WaitCursor is gone
+        // TODO: try-catch does not seem to work with async-await
 
         public MainForm(string path)
             : this()
@@ -57,7 +57,7 @@ namespace PpmViewer
                 string extension = Path.GetExtension(saveFileDialog.FileName);
 
                 try
-                {
+                /
                     if (extension == ".pbm" || extension == ".pgm" || extension == ".ppm")
                     {
                         Anymap.Save(image, saveFileDialog.FileName);

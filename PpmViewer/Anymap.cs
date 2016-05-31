@@ -57,14 +57,13 @@ namespace PpmViewer
                 // Check magic number
                 if (reader.ReadChar() != 'P' || reader.ReadChar() != '4') throw new Exception(); // TODO: Exception;
 
-                // Read width, height and maximum color value while ignoring whitespace and comments
+                // Read width and height while ignoring whitespace and comments
                 reader.ReadWhitespace();
                 int width = reader.ReadValue();
                 reader.ReadWhitespace();
                 int height = reader.ReadValue();
-                reader.ReadWhitespace();
 
-                // Read the actual pixels
+                // Read the actual pixel color values
                 Bitmap bitmap = new Bitmap(width, height);
                 int x = 0, y = 0;
                 while (reader.BaseStream.Position != reader.BaseStream.Length)
@@ -105,16 +104,15 @@ namespace PpmViewer
                 // Check magic number
                 if (reader.ReadChar() != 'P' || reader.ReadChar() != '5') throw new Exception(); // TODO: Exception;
 
-                // Read width, height and maximum color value while ignoring whitespace and comments
+                // Read width, height and maximum gray value while ignoring whitespace and comments
                 reader.ReadWhitespace();
                 int width = reader.ReadValue();
                 reader.ReadWhitespace();
                 int height = reader.ReadValue();
                 reader.ReadWhitespace();
                 int maximumGrayValue = reader.ReadValue();
-                reader.ReadWhitespace();
 
-                // Read the actual pixels
+                // Read the actual pixel color values
                 Bitmap bitmap = new Bitmap(width, height);
                 int i = 0;
                 while (reader.BaseStream.Position != reader.BaseStream.Length)
@@ -128,13 +126,13 @@ namespace PpmViewer
                 return bitmap;
             }
         }
-
+        
         private static Bitmap LoadFromPpm(string path)
         {
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
                 // Check magic number
-                if (reader.ReadChar() != 'P' || reader.ReadChar() != '6') throw new Exception(); // TODO: Exception;
+                if (reader.ReadChar() != 'P' || reader.ReadChar() != '6') throw new Exception(); // TODO: Exception
 
                 // Read width, height and maximum color value while ignoring whitespace and comments
                 reader.ReadWhitespace();
@@ -143,9 +141,8 @@ namespace PpmViewer
                 int height = reader.ReadValue();
                 reader.ReadWhitespace();
                 int maximumColorValue = reader.ReadValue();
-                reader.ReadWhitespace();
-
-                // Read the actual pixels
+                
+                // Read the actual pixel color values
                 Bitmap bitmap = new Bitmap(width, height);
                 int i = 0;
                 while (reader.BaseStream.Position != reader.BaseStream.Length)
@@ -167,21 +164,33 @@ namespace PpmViewer
 
         private static void SaveToPgm(Image image, string path)
         {
-            throw new NotImplementedException();
-        }
+            using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.CreateNew)))
+            using (Bitmap bitmap = new Bitmap(image))
+            {
+                // TODO: How to read/calculate maximum gray value?
+                writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P5\n{0} {1}\n{2}\n", bitmap.Width, bitmap.Height, 255)));
 
-        // TODO: SaveToPpm doesn't work
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    for (int x = 0; x < bitmap.Width; x++)
+                    {
+                        Color c = bitmap.GetPixel(x, y);
+                        writer.Write((byte)(c.GetBrightness() * 255));
+                    }
+                }
+            }
+        }
+        
         private static void SaveToPpm(Image image, string path)
         {
             using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.CreateNew)))
             using (Bitmap bitmap = new Bitmap(image))
             {
                 // TODO: How to read/calculate maximum color value?
-                writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P6\n{0} {1}\n{2}", bitmap.Width, bitmap.Height, 255)));
+                writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P6\n{0} {1}\n{2}\n", bitmap.Width, bitmap.Height, 255)));
 
                 for (int y = 0; y < bitmap.Height; y++)
                 {
-                    writer.Write('\n');
                     for (int x = 0; x < bitmap.Width; x++)
                     {
                         Color c = bitmap.GetPixel(x, y);
@@ -204,7 +213,7 @@ namespace PpmViewer
             StringBuilder builder = new StringBuilder();
             char c = reader.ReadChar();
 
-            while (c != ' ' && c != '\t' && c != '\n')
+            while (c != ' ' && c != '\t' && c != '\n' && c != '\0')
             {
                 builder.Append(c);
                 c = reader.ReadChar();
@@ -221,7 +230,7 @@ namespace PpmViewer
         {
             char c = reader.ReadChar();
 
-            while (c == ' ' || c == '\t' || c == '\n')
+            while (c == ' ' || c == '\t' || c == '\n' || c == '\0')
             {
                 c = reader.ReadChar();
 
