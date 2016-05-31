@@ -11,22 +11,26 @@ namespace PpmViewer
 {
     static class Anymap
     {
-        public static Bitmap Load(string path)
+        // Async because Anymap loading takes pretty long right now
+        public async static Task<Bitmap> Load(string path)
         {
-            string extension = Path.GetExtension(path);
-            switch(extension)
+            return await Task<Bitmap>.Run(new Func<Bitmap>(() =>
             {
-                case ".pbm":
-                    return LoadFromPbm(path);
-                case ".pgm":
-                    return LoadFromPgm(path);
-                case ".ppm":
-                    return LoadFromPpm(path);
-                default:
-                    throw new Exception(); // TODO: Invalid filename exception
-            }
+                string extension = Path.GetExtension(path);
+                switch (extension)
+                {
+                    case ".pbm":
+                        return LoadFromPbm(path);
+                    case ".pgm":
+                        return LoadFromPgm(path);
+                    case ".ppm":
+                        return LoadFromPpm(path);
+                    default:
+                        throw new Exception(); // TODO: Invalid filename exception
+                }
+            }));
         }
-
+        
         public static void Save(Image image, string path)
         {
             string extension = Path.GetExtension(path);

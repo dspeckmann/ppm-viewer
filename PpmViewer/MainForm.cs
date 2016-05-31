@@ -18,12 +18,14 @@ namespace PpmViewer
         // TODO: LoadPbm, LoadPgm and LoadPpm share too much code
         // TODO: Customize error message for different file types
         // TODO: How to distinguish between PPM and PlainPPM when saving?
+        // TODO: Zoom
+        // TODO: Notify user when image is loading, now that WaitCursor is gone
 
         public MainForm(string path)
             : this()
         {
             // TODO: Autosize window when given argument
-            Anymap.Load(path); // TODO: Error handling? Combine with openToolStripMenuItem_Click to one method
+            LoadImage(path);
         }
 
         public MainForm()
@@ -33,66 +35,45 @@ namespace PpmViewer
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(openFileDialog.ShowDialog() == DialogResult.OK)
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                Cursor = Cursors.WaitCursor;
-                toolStripProgressBar.Value = 0;
-                toolStripStatusLabel.Text = "Loading...";
-                string extension = Path.GetExtension(openFileDialog.FileName);
-
-                try
+                foreach (string path in openFileDialog.FileNames)
                 {
-                    if (extension == ".pbm" || extension == ".pgm" || extension == ".ppm")
-                    {
-                        pictureBox.Image = Anymap.Load(openFileDialog.FileName);
-                    }
-                    else
-                    {
-                        pictureBox.Image = Image.FromFile(openFileDialog.FileName);
-                    }
+                    LoadImage(path);
                 }
-                catch (Exception)
-                {
-                    MessageBox.Show("Error loading " + openFileDialog.FileName + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-
-                toolStripProgressBar.Value = 100;
-                saveAsToolStripMenuItem.Enabled = true;
-                Cursor = Cursors.Default;
             }
         }
-
+        
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (pictureBox.Image == null)
-                return;
+            if (tabControl.TabCount < 1) return;
 
-            string oldStatusText = toolStripStatusLabel.Text;
-            toolStripStatusLabel.Text = "Saving image...";
+            PictureTabPage tab = (PictureTabPage)tabControl.SelectedTab;
+            Image image = tab.Image;
             
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                toolStripStatusLabel.Text = "Saving image as " + saveFileDialog.FileName + "...";
+                Cursor = Cursors.WaitCursor;
                 string extension = Path.GetExtension(saveFileDialog.FileName);
 
                 try
                 {
                     if (extension == ".pbm" || extension == ".pgm" || extension == ".ppm")
                     {
-                        Anymap.Save(pictureBox.Image, saveFileDialog.FileName);
+                        Anymap.Save(image, saveFileDialog.FileName);
                     }
                     else
                     {
-
-                        pictureBox.Image.Save(saveFileDialog.FileName);
+                        image.Save(saveFileDialog.FileName);
                     }
                 }
                 catch (Exception)
                 {
                     MessageBox.Show("Could not save file as " + saveFileDialog.FileName + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+
+                Cursor = Cursors.Default;
             }
-            toolStripStatusLabel.Text = oldStatusText;
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -103,6 +84,35 @@ namespace PpmViewer
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new AboutBox().ShowDialog();
+        }
+
+        private async void LoadImage(string path)
+        {
+            string filename = Path.GetFileName(path);
+            string extension = Path.GetExtension(path);
+
+            try
+            {
+                Image image;
+                if (extension == ".pbm" || extension == ".pgm" || extension == ".ppm")
+                {
+                    image = await Anymap.Load(path);
+                }
+                else
+                {
+                    image = Image.FromFile(path);
+                }
+
+                PictureTabPage tab = new PictureTabPage(filename, image);
+                tabControl.TabPages.Add(tab);
+                tabControl.SelectedTab = tab;
+                
+                saveAsToolStripMenuItem.Enabled = true;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Error loading " + filename + "!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
