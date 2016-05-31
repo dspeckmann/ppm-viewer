@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing;
 using System.IO;
+using System.Text;
+using System.Drawing;
+using System.Threading.Tasks;
 using System.Collections;
 
 namespace PpmViewer
@@ -26,7 +24,7 @@ namespace PpmViewer
                     case ".ppm":
                         return LoadFromPpm(path);
                     default:
-                        throw new Exception(); // TODO: Invalid filename exception
+                        throw new Exception("Unknown file extension.");
                 }
             }));
         }
@@ -46,7 +44,7 @@ namespace PpmViewer
                     SaveToPpm(image, path);
                     break;
                 default:
-                    throw new Exception(); // TODO: Invalid filename exception
+                    throw new Exception("Unknown file extension.");
             }
         }
 
@@ -54,7 +52,7 @@ namespace PpmViewer
         {
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
-                // Check magic number
+                // Check magic number P4
                 if (reader.ReadChar() != 'P' || reader.ReadChar() != '4') throw new Exception(); // TODO: Exception;
 
                 // Read width and height while ignoring whitespace and comments
@@ -68,20 +66,10 @@ namespace PpmViewer
                 int x = 0, y = 0;
                 while (reader.BaseStream.Position != reader.BaseStream.Length)
                 {
-                    BitArray bits = new BitArray(reader.ReadByte());
-
+                    BitArray bits = new BitArray(reader.ReadBytes(1));
                     foreach (bool bit in bits)
                     {
-                        Color color;
-                        if (bit)
-                        {
-                            color = Color.Black;
-                        }
-                        else
-                        {
-                            color = Color.White;
-                        }
-
+                        Color color = bit ? Color.Black : Color.White;
                         bitmap.SetPixel(x, y, color);
 
                         if (++x == width)
@@ -101,7 +89,7 @@ namespace PpmViewer
         {
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
-                // Check magic number
+                // Check magic number P5
                 if (reader.ReadChar() != 'P' || reader.ReadChar() != '5') throw new Exception(); // TODO: Exception;
 
                 // Read width, height and maximum gray value while ignoring whitespace and comments
@@ -131,7 +119,7 @@ namespace PpmViewer
         {
             using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
             {
-                // Check magic number
+                // Check magic number P6
                 if (reader.ReadChar() != 'P' || reader.ReadChar() != '6') throw new Exception(); // TODO: Exception
 
                 // Read width, height and maximum color value while ignoring whitespace and comments
@@ -159,7 +147,28 @@ namespace PpmViewer
 
         private static void SaveToPbm(Image image, string path)
         {
-            throw new NotImplementedException();
+            using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.CreateNew)))
+            using (Bitmap bitmap = new Bitmap(image))
+            {
+                // Write magic number P4, width and height
+                writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P4\n{0} {1}\n", bitmap.Width, bitmap.Height)));
+
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    for (int x = 0; x < bitmap.Width; x += 8)
+                    {
+                        BitArray bits = new BitArray(8);
+                        for (int i = 0; i < (bitmap.Width - x - i) && i < 8; i++)
+                        {
+                            Color c = bitmap.GetPixel(x + i, y);
+                            bits[i] = c.GetBrightness() < 0.5 ? true : false;
+                        }
+                        byte[] buffer = new byte[1];
+                        bits.CopyTo(buffer, 0);
+                        writer.Write(buffer);
+                    }
+                }
+            }
         }
 
         private static void SaveToPgm(Image image, string path)
@@ -168,6 +177,7 @@ namespace PpmViewer
             using (Bitmap bitmap = new Bitmap(image))
             {
                 // TODO: How to read/calculate maximum gray value?
+                // Write magic number P5, width, height and maximum gray value
                 writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P5\n{0} {1}\n{2}\n", bitmap.Width, bitmap.Height, 255)));
 
                 for (int y = 0; y < bitmap.Height; y++)
@@ -187,6 +197,7 @@ namespace PpmViewer
             using (Bitmap bitmap = new Bitmap(image))
             {
                 // TODO: How to read/calculate maximum color value?
+                // Write magic number P6, width, height and maximum color value
                 writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P6\n{0} {1}\n{2}\n", bitmap.Width, bitmap.Height, 255)));
 
                 for (int y = 0; y < bitmap.Height; y++)
@@ -201,8 +212,7 @@ namespace PpmViewer
                 }
             }
         }
-
-
+        
         /// <summary>
         /// Reads from the BinaryReader until it encounters whitespace and tries to convert the read bytes to an integer.
         /// </summary>
