@@ -105,13 +105,22 @@ namespace PpmViewer
                 }
 
                 tab.Image = image;
-                tab.Cursor = Cursors.Default;
                 saveAsToolStripMenuItem.Enabled = true;
             }
             catch (Exception)
             {
                 tabControl.TabPages.Remove(tab);
                 MessageBox.Show(string.Format("Error loading {0}!", path), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            tab.Cursor = Cursors.Default;
+        }
+
+        private void tabControl_TabClosed(object sender, EventArgs e)
+        {
+            if(tabControl.TabCount < 1)
+            {
+                saveAsToolStripMenuItem.Enabled = false;
             }
         }
     }

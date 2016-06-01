@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -10,10 +11,7 @@ namespace PpmViewer
 {
     class ClosableTabControl : TabControl
     {
-        public ClosableTabControl()
-            : base()
-        {
-        }
+        public event EventHandler TabClosed;
 
         protected override void OnControlAdded(ControlEventArgs e)
         {
@@ -36,8 +34,14 @@ namespace PpmViewer
                 if(closeButtonBounds.Contains(e.Location))
                 {
                     TabPages.RemoveAt(i);
+                    OnTabClosed(new EventArgs());
                 }
             }
+        }
+
+        protected virtual void OnTabClosed(EventArgs e)
+        {
+            if (TabClosed != null) TabClosed(this, e);
         }
     }
 }
