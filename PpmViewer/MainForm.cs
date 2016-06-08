@@ -5,20 +5,19 @@ using System.Windows.Forms;
 
 namespace PpmViewer
 {
-    // TODO: Do not ignore maximum color/gray value
     // TODO: try-catch does not seem to work with async-await
+    // TODO: Support maximum color/gray values other than 255?
     // TODO: Detect anymap formats by magic number, not extension?
     // TODO: Add support for Plain PBM, PGM, PPM?
     // TODO: How to distinguish between binary and plain formats when saving?
-    // TODO: Implement zoom?
-    // TODO: AutoScaleMode Font vs DPI?
+    // TODO: Change "Oemplus" and "OemMinus" to "+" and "-"?
 
     public partial class MainForm : Form
     {
         public MainForm(string path)
             : this()
         {
-            // TODO: Autosize window when given argument (maximize, when image is bigger than screen)
+            // TODO: Autosize window when given argument (maximize, when image is larger than screen?)
             LoadImage(path);
         }
 
@@ -91,7 +90,7 @@ namespace PpmViewer
             tabControl.TabPages.Add(tab);
             tabControl.SelectedTab = tab;
             tab.Cursor = Cursors.WaitCursor;
-
+            
             try
             {
                 Image image;
@@ -106,8 +105,11 @@ namespace PpmViewer
 
                 tab.Image = image;
                 saveAsToolStripMenuItem.Enabled = true;
+                zoomInToolStripMenuItem.Enabled = true;
+                zoomOutToolStripMenuItem.Enabled = true;
+                setZoomToolStripMenuItem.Enabled = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 tabControl.TabPages.Remove(tab);
                 MessageBox.Show(string.Format("Error loading {0}!", path), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -121,6 +123,31 @@ namespace PpmViewer
             if(tabControl.TabCount < 1)
             {
                 saveAsToolStripMenuItem.Enabled = false;
+                zoomInToolStripMenuItem.Enabled = false;
+                zoomOutToolStripMenuItem.Enabled = false;
+                setZoomToolStripMenuItem.Enabled = false;
+            }
+        }
+
+        private void zoomInToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PictureTabPage tab = (PictureTabPage)tabControl.SelectedTab;
+            tab.Zoom += 0.1f;
+        }
+
+        private void zoomOutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PictureTabPage tab = (PictureTabPage)tabControl.SelectedTab;
+            tab.Zoom -= 0.1f;
+        }
+
+        private void setZoomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PictureTabPage tab = (PictureTabPage)tabControl.SelectedTab;
+            ZoomForm zoomForm = new ZoomForm(tab.Zoom);
+            if(zoomForm.ShowDialog(this) == DialogResult.OK)
+            {
+                tab.Zoom = zoomForm.Zoom;
             }
         }
     }

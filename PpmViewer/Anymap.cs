@@ -14,12 +14,12 @@ namespace PpmViewer
         /// </summary>
         /// <param name="path">The path of the anymap file to load.</param>
         /// <returns>The task that delivers a bitmap containing the loaded image.</returns>
-        public static async Task<Bitmap> LoadAsync(string path)
+        public static Task<Bitmap> LoadAsync(string path)
         {
-            return await Task<Bitmap>.Run(new Func<Bitmap>(() =>
+            return Task.Run(() =>
             {
                 return Load(path);
-            }));
+            });
         }
 
         /// <summary>
@@ -118,6 +118,8 @@ namespace PpmViewer
                 reader.ReadWhitespace();
                 int maximumGrayValue = reader.ReadValue();
 
+                if (maximumGrayValue != 255) throw new Exception("Maxmimum gray values other than 255 are not supported.");
+
                 // Read the actual pixel color values
                 Bitmap bitmap = new Bitmap(width, height);
                 int i = 0;
@@ -147,7 +149,9 @@ namespace PpmViewer
                 int height = reader.ReadValue();
                 reader.ReadWhitespace();
                 int maximumColorValue = reader.ReadValue();
-                
+
+                if (maximumColorValue != 255) throw new Exception("Maxmimum color values other than 255 are not supported.");
+
                 // Read the actual pixel color values
                 Bitmap bitmap = new Bitmap(width, height);
                 int i = 0;
@@ -194,7 +198,6 @@ namespace PpmViewer
             using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.CreateNew)))
             using (Bitmap bitmap = new Bitmap(image))
             {
-                // TODO: How to read/calculate maximum gray value?
                 // Write magic number P5, width, height and maximum gray value
                 writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P5\n{0} {1}\n{2}\n", bitmap.Width, bitmap.Height, 255)));
 
@@ -214,7 +217,6 @@ namespace PpmViewer
             using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.CreateNew)))
             using (Bitmap bitmap = new Bitmap(image))
             {
-                // TODO: How to read/calculate maximum color value?
                 // Write magic number P6, width, height and maximum color value
                 writer.Write(ASCIIEncoding.ASCII.GetBytes(string.Format("P6\n{0} {1}\n{2}\n", bitmap.Width, bitmap.Height, 255)));
 
